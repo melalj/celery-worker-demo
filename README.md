@@ -1,5 +1,8 @@
 # Question: Optimal configuration for a python worker (crawler + save db) on celery
 
+Discussion on: https://stackoverflow.com/questions/55165370/optimal-setup-for-a-python-worker-crawler-save-db-on-celery
+
+
 I have multiple python workers that crawl certain websites, parse the data and store them on a Postgres database.
 
 It's unclear for me how to architect the code to optimize the server resources (deployed on microservices multiple pods on kubernetes). Let's assume that there's no rate limit for the request.
@@ -9,9 +12,6 @@ For demo purpose, I created a sample code that gets the top 10k websites, store 
 `Celery` is using the pool `gevent` since the worker have many network I/O. 
 I added `psycogreen` to patch postgres as well to avoid bottlenecks.
 To avoid reaching Postgres max connections, I added `pgbouncer` as database proxy.
-
-The code is located on:
-https://github.com/melalj/celery-worker-demo/
 
 The entry point is `./app/entrypoint.sh` and main code logic in `./app/worker.py`
 
@@ -27,8 +27,8 @@ The entry point is `./app/entrypoint.sh` and main code logic in `./app/worker.py
 ### How to optimize the code?
 It seems that there's room to improve the code, how can I trace bottlenecks (I suspect it's the db or beautifulsoup, it seems like a dark mystery while using gevent) - and how to optimize it?
 
-### The database closes unexpectly something, why?
-When I run the code and trigger with +10K pulls. It hangs the whole process and occasionally throws:
+### The database closes unexpectedly sometimes, why?
+When I run the code and trigger with +10K pulls. The worker hangs after few pulls and occasionally throws:
 `(psycopg2.OperationalError) server closed the connection unexpectedly`
 Any recommendations on how to size resources of the db to support such tasks?
 
