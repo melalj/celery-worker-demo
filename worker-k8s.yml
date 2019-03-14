@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app: worker
+spec:
+  replicas: 20
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+        redis-client: "true"
+    spec:
+      containers:
+        - name: worker
+          image: celery-worker-demo:latest
+          entrypoint: ["sh", "./entrypoint.sh"]
+          livenessProbe:
+            initialDelaySeconds: 10
+            timeoutSeconds: 5
+            exec:
+              command:
+                [
+                  "/usr/local/bin/python",
+                  "-c",
+                  "\"import os;from celery.task.control import inspect;from worker import app;exit(0 if os.environ['HOSTNAME'] in ','.join(inspect(app=app).stats().keys()) else 1)\""
+                ]
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            exec:
+              command:
+                [
+                  "/usr/local/bin/python",
+                  "-c",
+                  "\"import os;from celery.task.control import inspect;from worker import app;exit(0 if os.environ['HOSTNAME'] in ','.join(inspect(app=app).stats().keys()) else 1)\""
+                ]
+          resources:
+            requests:
+              cpu: "240m"
+              memory: "150Mi"
+            limits:
+              cpu: "260m"
+              memory: "200Mi"
+          envFrom:
+            - configMapRef:
+                name: env
+

@@ -1,0 +1,1 @@
+celery worker -n worker@%h. --app=worker --pool=gevent --concurrency=10 --loglevel=INFO --without-mingle --without-gossip -Ofair

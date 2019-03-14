@@ -1,0 +1,62 @@
+version: '3.7'
+services:
+  worker:
+    build: .
+    image: worker
+    command: ['sh', './entrypoint.sh']
+    environment: 
+      - PYTHON_ENV=development
+      - WORKER_CONCURRENCY=50
+      - POSTGRES_URL=postgres://postgres@pgbouncer:5432
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - pgbouncer
+      - redis
+    networks:
+      - app-tier
+    restart: on-failure
+    volumes: 
+      - ./app:/app
+
+  postgres:
+    restart: on-failure
+    image: postgres:9.6
+    volumes:
+      - pgdata:/var/lib/postgresql
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=celery-worker-demo
+    networks:
+      - app-tier
+    ports:
+      - 15432:5432
+    
+
+  redis:
+    image: bitnami/redis:4.0.12
+    networks:
+      - app-tier
+    ports:
+      - 16379:6379
+    environment:
+      - ALLOW_EMPTY_PASSWORD=true
+
+  pgbouncer:
+    image: brainsam/pgbouncer:latest
+    environment:
+      DB_HOST: postgres
+      DB_USER: postgres
+      DB_port: 5432
+    depends_on:
+      - postgres
+    networks:
+      - app-tier
+    ports:
+      - 16432:6432
+ 
+volumes:
+  pgdata:
+
+networks:
+  app-tier:
+    driver: bridge
